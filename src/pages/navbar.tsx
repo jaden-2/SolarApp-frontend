@@ -13,14 +13,14 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
   return (
     <nav className="p-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md fixed w-full z-20 shadow-md">
       <div className="max-w-7xl mx-auto flex items-center">
-        <div className="flex-1 flex justify-start space-x-8 font-medium text-sm">
+        <div className="flex-1 flex justify-start space-x-5 font-medium text-sm">
           <Link to="/" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             Home
           </Link>
         </div>
         
         {onTabChange && (
-          <div className="flex-1 flex justify-center space-x-8 font-medium text-sm">
+          <div className="flex-1 flex justify-evenly font-medium text-sm">
             <button
               onClick={() => onTabChange('new')}
               className={`hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${
@@ -29,6 +29,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
             >
               New Report
             </button>
+
             <button
               onClick={() => onTabChange('list')}
               className={`hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${

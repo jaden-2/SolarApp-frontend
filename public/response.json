@@ -1,0 +1,105 @@
+{
+    "reportId": 1053,
+    "batteryBank": {
+        "batteryId": 1053,
+        "brand": "Teze",
+        "batteryCurrentCapacityAh": 300,
+        "batteryVoltage": 48.0,
+        "batteryEnergyCapacityAh": 15.36,
+        "requiredBankCapacityAh": 269.6078431372549,
+        "batteryType": "LITHIUM",
+        "configuration": {
+            "series": 1,
+            "parallel": 1,
+            "total": 1
+        }
+    },
+    "solarArray": {
+        "arrayId": 1003,
+        "brand": "Canadian Solar",
+        "model": "CS6R-400MS",
+        "mechanicalProperties": {
+            "length_m": 1.722,
+            "width_m": 1.134
+        },
+        "electricalProperties": {
+            "power_w": 400,
+            "Vmax": 34.1,
+            "type": "MONO",
+            "Imp": 11.73,
+            "Isc": 12.5,
+            "Voc": 40.5
+        },
+        "configuration": {
+            "series": 2,
+            "parallel": 4,
+            "total": 8
+        },
+        "calculatePanelCapacity": 2769.230769230769
+    },
+    "dcBreaker": {
+        "breakerId": 1003,
+        "model": "OM1-251",
+        "current": 60,
+        "maximumVoltage": 400,
+        "type": "DC",
+        "calculatedCapacity": 57.0
+    },
+    "wireDetails": [
+        {
+            "type": "COPPER",
+            "maximumAllowedWireLength_m": 965.5662259068948,
+            "powerLoss": 0.02,
+            "wireSpecification": {
+                "SWG": "SWG5",
+                "diameter_mm": 5.385,
+                "maxCurrent": 52.3
+            },
+            "lengthType": "Round-Trip",
+            "recommendation": "Minimize cost by keeping cable length below 50m"
+        },
+        {
+            "type": "ALUMINUM",
+            "maximumAllowedWireLength_m": 612.1325507636163,
+            "powerLoss": 0.02,
+            "wireSpecification": {
+                "SWG": "SWG5",
+                "diameter_mm": 5.385,
+                "maxCurrent": 52.3
+            },
+            "lengthType": "Round-Trip",
+            "recommendation": "Minimize cost by keeping cable length below 50m"
+        }
+    ],
+    "inverter": {
+        "inverterId": 1003,
+        "name": "WTHD",
+        "model": "WTHD-LI-10K",
+        "capacityKva": 10.0,
+        "systemVoltage": 48,
+        "type": "Sine",
+        "calculatedInverterCapacityKva": 8.25,
+        "configuration": {
+            "series": 1,
+            "parallel": 1,
+            "total": 1
+        }
+    },
+    "chargeController": {
+        "controllerId": 1003,
+        "brand": "Lumiax",
+        "model": "MT6020-Pro",
+        "type": "MPPT",
+        "maximumChargeCurrent": 60,
+        "minimumVolts": 190,
+        "maximumVolts": 750,
+        "calculatedCapacity": 50.0,
+        "configuration": {
+            "series": 1,
+            "parallel": 1,
+            "total": 1
+        }
+    },
+    "createdAt": "2025-06-14T22:31:19.986321Z",
+    "updateAt": null
+}

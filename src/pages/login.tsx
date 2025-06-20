@@ -3,6 +3,7 @@ import { useDarkMode } from '../components/darkmode';
 import { FaSun, FaMoon } from 'react-icons/fa';
 import LoadingScreen from '../components/Loader';
 import { useAuth } from '../AuthProvider';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
   const [username, setEmail] = useState('');
@@ -12,6 +13,7 @@ const Login: React.FC = () => {
   const apiEndpint: string = import.meta.env.VITE_API_URL;
   const [isLoading, setLoading] = useState(false);
   const {login} = useAuth();
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,11 +35,16 @@ const Login: React.FC = () => {
         const data = await response.json();
         login(data.token)
         setLoading(false)
+        navigate("/get-started", {
+          replace: true
+        })
       } else {
-        setError('Invalid credentials');
         setLoading(false)
+        console.error("Invalid credentials")
+        setError('Invalid credentials');
       }
     } catch (err) {
+      setLoading(false)
       setError('An error occurred. Please try again.');
     }
   };
@@ -125,7 +132,7 @@ const Login: React.FC = () => {
               Forgot password?
             </a>
             <a
-              href="/register"
+              href="/sign-up"
               className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               Create account
