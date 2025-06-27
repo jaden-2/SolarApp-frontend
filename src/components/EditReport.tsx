@@ -1,67 +1,94 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import type { reportInterface, wireDetail } from '../interfaces/interfaces';
-
-// Example option data (replace with your API data)
-const batteryOptions: Object = {
-  LITHIUM: [
-    { brand: 'Teze', voltage: 48, capacity: 300, id: 1 },
-    { brand: 'PowerSafe', voltage: 24, capacity: 200, id: 2 },
-  ],
-  LEAD_ACID: [
-    { brand: 'Exide', voltage: 12, capacity: 150, id: 3 },
-    { brand: 'Amaron', voltage: 12, capacity: 180, id: 4 },
-  ],
-};
-const solarArrayOptions = [
-  { brand: 'Canadian Solar', model: 'CS6R-400MS', power: 400, id: 1 },
-  { brand: 'JA Solar', model: 'JAM60S20', power: 370, id: 2 },
-];
-const inverterOptions = [
-  { name: 'Sukam', model: 'Fusion', capacityKva: 5, systemVoltage: 48, type: 'Pure Sine', id: 1 },
-  { name: 'Luminous', model: 'EcoVolt', capacityKva: 3.5, systemVoltage: 24, type: 'PWM', id: 2 },
-];
-const chargeControllerOptions = [
-  { brand: 'Outback', model: 'FM80', type: 'MPPT', maxCurrent: 80, minVolts: 12, maxVolts: 60, id: 1 },
-  { brand: 'Victron', model: 'BlueSolar', type: 'PWM', maxCurrent: 50, minVolts: 12, maxVolts: 48, id: 2 },
-];
+import { type ModifiedPayLoad, type reportInterface, type ResourceMap, type wireDetail } from '../interfaces/interfaces';
+import { useAuth } from '../AuthProvider';
 
 
+const fetchResources = async(url: string)=>{
+    try{
+        let response = await fetch(url)
+
+        if(response.status == 200){
+            return await response.json()
+        }
+    }catch(err){
+        console.error(err)
+    }
+}
+
+const handlePatch = async (url: string, body: string, token: string|null) =>{
+  try{
+    let response = await fetch(url, {
+      body: body,
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if(response.status == 200)
+      return await response.json()
+  }catch(err){
+    console.error(err)
+  }
+}
 
 const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
+
   // Local state for editing
   const [editing, setEditing] = useState<{ [key: string]: boolean }>({});
-  const [form, setForm] = useState<any>(data);
-
+  const [report, setReport] = useState<reportInterface>(data);
+ 
   // Handlers
   const handleEdit = (section: string) => setEditing({ ...editing, [section]: true });
   const handleCancel = (section: string) => setEditing({ ...editing, [section]: false });
-  const handleChange = (section: string, field: string, value: any) => {
-    setForm((prev: any) => ({
-      ...prev,
-      [section]: { ...prev[section], [field]: value },
-    }));
-  };
-  const handleSelectBatteryType = (type: string) => {
-    setForm((prev: any) => ({
-      ...prev,
-      batteryBank: { ...prev.batteryBank, batteryType: type },
-    }));
-  };
-  const handleSave = async (section: string) => {
-    setEditing({ ...editing, [section]: false });
-   // await onPatch({ [section]: form[section] });
+
+  const handleChange = (item: string,  value: number) => {
+    setPayload((prev=>({...prev, [item]: value})))
+
   };
 
+
+  const handleSave = async (patch: string, section: string) => {
+    setEditing({ ...editing, [section]: false });
+    const key = patch as keyof ModifiedPayLoad;
+    let requestBody = JSON.stringify({
+      id: payLoad[key]
+    }
+    )
+    let url = `${import.meta.env.VITE_API_URL}/${report.reportId}/${key}`
+    let updateReport:reportInterface = await handlePatch(url, requestBody, token);
+    setReport(updateReport)
+  };
+
+  //-----------my space-----------------
+  const [resources, setResources] = useState<Partial<ResourceMap>>({})
+  const [selectedBatteryC, setSelectedBatteryC] = useState<string>()
+  const [payLoad, setPayload] = useState<Partial<ModifiedPayLoad>>({});
+  const {token} = useAuth()
+
+  useEffect(()=>{
+      let baseUrl = import.meta.env.VITE_API_URL
+      let items: (keyof ResourceMap)[] = ["panels", "inverters", "batteries", "controllers"]
+      items.forEach((item)=>{
+          let url = `${baseUrl}/resources/${item}`
+          fetchResources(url).then((val)=>{
+              setResources((prev=> ({...prev, [item]: val})))
+          })
+      })
+  }, [])
+    
+ 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <header className="mb-8 text-center">
+       <header className="mb-8 text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Edit Solar System Report #{form.reportId}
+            Title: {data.title}
         </h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Generated: {format(new Date(form.createdAt), 'PPpp')}
+            Generated: {format(new Date(data.createdAt), 'PPpp')}
         </p>
+        <h2 className='text-left'><b>ReportId: </b>#{data.reportId}</h2>
+        
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -85,7 +112,7 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
               <div className="space-x-2">
                 <button
                   className="text-green-600 hover:underline"
-                  onClick={() => handleSave('batteryBank')}
+                  onClick={() => handleSave('battery', 'batteryBank')}
                 >
                   Save
                 </button>
@@ -103,39 +130,70 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
               <div>
                 <label className="block mb-1 font-medium">Battery Type</label>
                 <select
-                  value={form.batteryBank.batteryType}
-                  onChange={e => handleSelectBatteryType(e.target.value)}
+                  onChange={(e)=>setSelectedBatteryC(e.target.value)}
                   className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  {Object.keys(batteryOptions).map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
+                <option hidden>Battery Types</option>
+                 <option value="LITHIUM">Lithium</option>
+                 <option value="AGM">Dry Cell</option>
+                 <option value="FLOODED">Tubular</option>
                 </select>
               </div>
+
               <div>
                 <label className="block mb-1 font-medium">Battery</label>
                 <select
-                  value={form.batteryBank.brand}
-                  onChange={e => handleChange('batteryBank', 'brand', e.target.value)}
+                  onChange={e => handleChange('battery', parseInt(e.target.value))}
                   className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  {/* {batteryOptions[form.batteryBank.batteryType]?.map((batt) => (
-                    <option key={batt.id} value={batt.brand}>
-                      {batt.brand} - {batt.voltage}V {batt.capacity}Ah
-                    </option>
-                  ))} */}
+                  <option value="" hidden>Batteries</option>
+                  {
+                    resources.batteries?.filter((b)=>b.type==selectedBatteryC).map((battery)=>{
+                      return <option value={battery.id} key={battery.id}>
+                        {battery.brand} - {battery.energyCapacity}Kwh
+                      </option>
+                    })
+                  }
                 </select>
               </div>
               {/* Add more editable fields as needed */}
             </div>
           ) : (
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
-              <p><span className="font-medium">Brand:</span> {form.batteryBank.brand}</p>
-              <p><span className="font-medium">Type:</span> {form.batteryBank.batteryType}</p>
-              <p><span className="font-medium">Voltage:</span> {form.batteryBank.batteryVoltage}V</p>
-              <p><span className="font-medium">Current Capacity:</span> {form.batteryBank.batteryCurrentCapacityAh}Ah</p>
-              <p><span className="font-medium">Energy Capacity:</span> {form.batteryBank.batteryEnergyCapacityAh}kWh</p>
-            </div>
+                    <section>
+                    <h3 className='text-center'><b>Recommended Battery</b></h3>
+                    <div className="space-y-2 text-gray-700 dark:text-gray-300 mt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p><span className="font-medium">Brand:</span> {data.batteryBank.brand}</p>
+                        <p><span className="font-medium">Type:</span> {data.batteryBank.batteryType}</p>
+                        <p><span className="font-medium">Voltage:</span> {data.batteryBank.batteryVoltage}V</p>
+                        <p><span className="font-medium">Current Capacity:</span> {data.batteryBank.batteryCurrentCapacityAh}Ah</p>
+                        <p><span className="font-medium">Energy Capacity:</span> {data.batteryBank.batteryEnergyCapacityAh}kWh</p>
+                        {/*  */}
+                        <div className="mt-2 pt-4">
+                            <p className="font-medium mb-2">Configuration:</p>
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Series</p>
+                                    <p className="font-semibold">{data.batteryBank.configuration.series}</p>
+                                </div>
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Parallel</p>
+                                    <p className="font-semibold">{data.batteryBank.configuration.parallel}</p>
+                                </div>
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                                    <p className="font-semibold">{data.batteryBank.configuration.total}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-4 pt-4">
+                        <h4 className='text-center'><b>Minimum Battery Size</b></h4>
+                        <div className="space-y-2 text-gray-700 dark:text-gray-300 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p><span className="font-medium ">Minimum Battery Capacity: </span>{Math.round(data.batteryBank.requiredBankCapacityAh)}Ah</p>
+                        </div>
+                        
+                    </div>
+                </section>
           )}
         </section>
 
@@ -159,7 +217,7 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
               <div className="space-x-2">
                 <button
                   className="text-green-600 hover:underline"
-                  onClick={() => handleSave('solarArray')}
+                  onClick={() => handleSave('array', "solarArray")}
                 >
                   Save
                 </button>
@@ -176,24 +234,50 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             <div className="space-y-4">
               <label className="block mb-1 font-medium">Solar Array</label>
               <select
-                value={form.solarArray.brand}
-                onChange={e => handleChange('solarArray', 'brand', e.target.value)}
+                value={report.solarArray.brand}
+                onChange={e => handleChange('array', parseInt(e.target.value))}
                 className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               >
-                {solarArrayOptions.map((panel) => (
-                  <option key={panel.id} value={panel.brand}>
-                    {panel.brand} - {panel.model} ({panel.power}W)
+                {
+                resources.panels?.map((panel) => (
+                  <option key={panel.id} value={panel.id}>
+                    {panel.brand} - ({panel.power}W)
                   </option>
                 ))}
               </select>
               {/* Add more editable fields as needed */}
             </div>
           ) : (
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
-              <p><span className="font-medium">Brand:</span> {form.solarArray.brand}</p>
-              <p><span className="font-medium">Model:</span> {form.solarArray.model}</p>
-              <p><span className="font-medium">Power:</span> {form.solarArray.electricalProperties?.power_w}W</p>
-            </div>
+            <section>   
+                    <h3 className='text-center'><b>Recommended Solar Array</b></h3>
+                    <div className="space-y-2 text-gray-700 dark:text-gray-300 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p><span className="font-medium">Brand:</span> {data.solarArray.brand}</p>
+                        <p><span className="font-medium">Model:</span> {data.solarArray.model}</p>
+                        <p><span className="font-medium">Power:</span> {data.solarArray.electricalProperties.power_w}W</p>
+                        <p><span className="font-medium">Type:</span> {data.solarArray.electricalProperties.type}</p>
+                        <div>
+                            <p className="font-medium mb-2">Configuration:</p>
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Series</p>
+                                    <p className="font-semibold">{data.solarArray.configuration.series}</p>
+                                </div>
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Parallel</p>
+                                    <p className="font-semibold">{data.solarArray.configuration.parallel}</p>
+                                </div>
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                                    <p className="font-semibold">{data.solarArray.configuration.total}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 className='text-center mt-4 pt-4'><b>Minimum Solar Array Size</b></h3>
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p><span className="font-medium">Minimum Solar Array Power:</span> {data.solarArray.calculatePanelCapacity.toFixed(0)}W</p>
+                        </div>
+                    </div>
+                </section>
           )}
         </section>
 
@@ -217,7 +301,7 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
               <div className="space-x-2">
                 <button
                   className="text-green-600 hover:underline"
-                  onClick={() => handleSave('inverter')}
+                  onClick={() => handleSave('inverter', "inverter")}
                 >
                   Save
                 </button>
@@ -234,29 +318,55 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             <div className="space-y-4">
               <label className="block mb-1 font-medium">Inverter</label>
               <select
-                value={form.inverter.name}
-                onChange={e => handleChange('inverter', 'name', e.target.value)}
+                value={report.inverter.name}
+                onChange={e => handleChange('inverter', parseInt(e.target.value))}
                 className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               >
-                {inverterOptions.map((inv) => (
-                  <option key={inv.id} value={inv.name}>
-                    {inv.name} - {inv.model} ({inv.capacityKva}kVA)
+                {resources.inverters?.map((inv) => (
+                  <option key={inv.id} value={inv.id}>
+                    {inv.name} - ({inv.capacity}kVA)
                   </option>
                 ))}
               </select>
               {/* Add more editable fields as needed */}
             </div>
           ) : (
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
-              <p><span className="font-medium">Brand:</span> {form.inverter.name}</p>
-              <p><span className="font-medium">Model:</span> {form.inverter.model}</p>
-              <p><span className="font-medium">Capacity:</span> {form.inverter.capacityKva}kVA</p>
-            </div>
+             <section>
+                    <h3 className='text-center'><b>Recommened Inverter</b></h3>
+                    <div className="space-y-2 text-gray-700 dark:text-gray-300 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p><span className="font-medium">Brand:</span> {data.inverter.name}</p>
+                        <p><span className="font-medium">Model:</span> {data.inverter.model}</p>
+                        <p><span className="font-medium">Capacity:</span> {data.inverter.capacityKva}kVA</p>
+                        <p><span className="font-medium">System Voltage:</span> {data.inverter.systemVoltage}V</p>
+                        <p><span className="font-medium">Type:</span> {data.inverter.type}</p>                        <div>
+                            <p className="font-medium mb-2">Configuration:</p>
+                            <div className="grid grid-cols-3 gap-4 text-center">
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Series</p>
+                                    <p className="font-semibold">{data.inverter.configuration.series}</p>
+                                </div>
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Parallel</p>
+                                    <p className="font-semibold">{data.inverter.configuration.parallel}</p>
+                                </div>
+                                <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                                    <p className="font-semibold">{data.inverter.configuration.total}</p>
+                                </div>
+                            </div>
+                        
+                        <h3 className='text-center mt-4 pt-4'><b>Minimum Inverter Capacity</b></h3>
+                        </div>
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p><span className="font-medium">Minimum Inverter Capacity:</span> {data.inverter.calculatedInverterCapacityKva}kVA</p>
+                        </div>
+                    </div>
+                </section>
           )}
         </section>
 
         {/* Charge Controller Section */}
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl lg:col-span-3 relative">
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl lg:col-span-1 relative">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +385,7 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
               <div className="space-x-2">
                 <button
                   className="text-green-600 hover:underline"
-                  onClick={() => handleSave('chargeController')}
+                  onClick={() => handleSave('controller', "chargeController")}
                 >
                   Save
                 </button>
@@ -292,33 +402,83 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             <div className="space-y-4">
               <label className="block mb-1 font-medium">Charge Controller</label>
               <select
-                value={form.chargeController.brand}
-                onChange={e => handleChange('chargeController', 'brand', e.target.value)}
+                value={report.chargeController.brand}
+                onChange={e => handleChange('controller', parseInt(e.target.value))}
                 className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               >
-                {chargeControllerOptions.map((cc) => (
-                  <option key={cc.id} value={cc.brand}>
-                    {cc.brand} - {cc.model} ({cc.type})
+                {resources.controllers?.map((cc) => (
+                  <option key={cc.id} value={cc.id}>
+                    {cc.brand} - {cc.type} - {cc.maxChargeCurrent} Amps
                   </option>
                 ))}
               </select>
               {/* Add more editable fields as needed */}
             </div>
           ) : (
-            <div className="space-y-2 text-gray-700 dark:text-gray-300">
-              <p><span className="font-medium">Brand:</span> {form.chargeController.brand}</p>
-              <p><span className="font-medium">Model:</span> {form.chargeController.model}</p>
-              <p><span className="font-medium">Type:</span> {form.chargeController.type}</p>
-              <p><span className="font-medium">Max Current:</span> {form.chargeController.maximumChargeCurrent}A</p>
-            </div>
+          <section>
+              <div className="space-y-2 text-gray-700 dark:text-gray-300 ">
+                  <p className="font-medium mb-2 text-center">Recommended System:</p>
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <p><span className="font-medium">Brand:</span> {data.chargeController.brand}</p>
+                      <p><span className="font-medium">Model:</span> {data.chargeController.model}</p>
+                      <p><span className="font-medium">Type:</span> {data.chargeController.type}</p>
+                      <p><span className="font-medium">Max Current:</span> {data.chargeController.maximumChargeCurrent}A</p>
+                      <p><span className="font-medium">Voltage Range:</span> {data.chargeController.minimumVolts}V - {data.chargeController.maximumVolts}V</p>
+                  </div>                     
+                  
+              </div>
+              <div>
+                      <p className="font-medium mb-2">Configuration:</p>
+                      <div className="grid grid-cols-3 gap-4 text-center">
+                          <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Series</p>
+                              <p className="font-semibold">{data.chargeController.configuration.series}</p>
+                          </div>
+                          <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Parallel</p>
+                              <p className="font-semibold">{data.chargeController.configuration.parallel}</p>
+                          </div>
+                          <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Total</p>
+                              <p className="font-semibold">{data.chargeController.configuration.total}</p>
+                          </div>
+                      </div>
+              </div>
+              <h3 className='text-center mt-4 pt-4'><b>Minimum Charge Controller Capacity</b></h3>
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <p><span className="font-medium">Minimum Controller Capacity:</span> {data.chargeController.calculatedCapacity}A</p>
+                  </div>
+              </section>
           )}
+        </section>
+
+        {/* DC Breaker Section */}
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl col-span-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8V7a5 5 0 0110 0v1m-7 4h6m-7 4h8" />
+                </svg>
+                DC Breaker
+            </h2>
+            <h3 className='text-center'><b>Recommened DC Breaker</b></h3>
+            <div className="space-y-2 text-gray-700 dark:text-gray-300 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p><span className="font-medium">Model:</span> {data.dcBreaker.model}</p>
+                <p><span className="font-medium">Capacity:</span> {data.dcBreaker.current}A</p>
+                <p><span className="font-medium">Maximum Voltage:</span> {data.dcBreaker.maximumVoltage}V</p>
+                <p><span className="font-medium">Type:</span> {data.dcBreaker.type}</p>                        <div>
+                </div>
+                <h3 className='text-center mt-4 pt-4'><b>Minimum Dc Breaker Capacity</b></h3>
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p><span className="font-medium">Minimum DC Breaker Capacity:</span> {data.dcBreaker.calculatedCapacity}A</p>
+                </div>
+            </div>
         </section>
 
         {/* Wire Details Section */}
         <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl lg:col-span-3">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Wire Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {form.wireDetails.map((wire: wireDetail, index: number) => (
+            {report.wireDetails.map((wire: wireDetail, index: number) => (
               <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                 <h3 className="font-medium text-lg mb-2">{wire.type} Wire</h3>
                 <div className="space-y-1 text-sm">

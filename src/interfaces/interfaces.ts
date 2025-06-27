@@ -7,6 +7,7 @@ export interface SystemParams {
   arraySeriesLength: number;
   systemVolt: number;
   batteryType: batteryCategories;
+  title: string;
 }
 export type solarPanel = {
   brand: string,
@@ -22,7 +23,7 @@ export interface Payload extends SystemParams{
 
 //----------------end----------------------
 
-
+export type Dictionary = Record<string, Battery[]>
 //---------------Report interface--------------
 export interface reportInterface{
     reportId: number,
@@ -104,6 +105,7 @@ interface wireSpecification{
     diameter_mm: number,
     maxCurrent: number
 }
+
 export interface wireDetail{
     type: "COPPER"|"ALUMINUM",
     maximumAllowedWireLength_m: number,
@@ -111,4 +113,47 @@ export interface wireDetail{
     wireSpecification: wireSpecification,
     lengthtType: string,
     recommendation: string
+}
+
+export interface Battery{
+    id: number,
+    brand: string,
+    voltage: number,
+    type: batteryCategories,
+    energyCapacity: number,
+    currentCapacity: number
+}
+
+export interface Controller{
+    id: number,
+    brand: string, 
+    type: string,
+    maxChargeCurrent: number,
+    minVoltage: number,
+    maxVoltage: number
+}
+
+export interface Inverter{
+    id: number,
+    name: string,
+    capacity: number,
+    systemVoltage: number,
+    type: string
+}
+
+export interface Panels extends solarPanel{
+    id: number
+}
+export type ResourceMap ={
+    panels: Panels[],
+    batteries: Battery[],
+    controllers: Controller[],
+    inverters: Inverter[]
+}
+
+export type ModifiedPayLoad= {
+    array: number,
+    battery: number,
+    controller: number,
+    inverter: number
 }

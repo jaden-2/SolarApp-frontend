@@ -4,6 +4,7 @@ import { useAuth } from "../AuthProvider";
 import LoadingScreen from "./Loader";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import SolarReport from "./Report";
+import EditReport from "./EditReport";
 
 interface LoadItem {
   id: string;
@@ -16,7 +17,7 @@ interface LoadItem {
 //const SolarReport: React.FC<{ data:  reportInterface}> = ({ data }) => {
 const NewReport: React.FC= ()=>{
 
-    const [isManualMode, setIsManualMode] = useState(true);
+  const [isManualMode, setIsManualMode] = useState(false);
   const [directInput, setDirectInput] = useState({ power: 0, energy: 0 });
   const [loads, setLoads] = useState<LoadItem[]>([]);
   const [isLoading, setLoading] = useState(false)
@@ -25,7 +26,11 @@ const NewReport: React.FC= ()=>{
   const [isError, setIsError] = useState(false)
   const {token} = useAuth()
   const [report, setReport] = useState<reportInterface|null>(null);
-  
+  const [title, setTitle] = useState<string>("");
+  const [autonomy, setAutonomy] = useState<number>(0);
+  const [psh, setPsh] = useState<number>(0);
+  const [bLoad, setBload] = useState<number>(100);
+  const [series, setSeries] = useState<number> (2);
   const [systemParams, setSystemParams] = useState<SystemParams>({
     preferredPanel: {brand: "", type:"", power: 0},
     daysOfBackup: 0,
@@ -33,7 +38,8 @@ const NewReport: React.FC= ()=>{
     loadOnBattery: 100,
     arraySeriesLength: 2,
     systemVolt: 0,
-    batteryType: ""
+    batteryType: "",
+    title: title
   });
   //-------------------end----------------------
   
@@ -53,7 +59,7 @@ const NewReport: React.FC= ()=>{
     }
     }
     fetchPanels()
-  }, [])
+  }, []);
   
   
   const addNewRow = () => {
@@ -87,34 +93,37 @@ const NewReport: React.FC= ()=>{
   const getPayload = () => {
     let power:number = 0;
     let energy:number = 0;
+
+    power = directInput.power;
+    energy = directInput.energy
+
     if(isManualMode){
       loads.forEach((load)=>{
         power += load.power;
         energy += load.energy;
       })
     }
-    power = directInput.power;
-    energy = directInput.energy
-
-    const payload: Payload = {
+    
+      const payload: Payload = {
       energy_wh: energy,
       load_w: power,
-      daysOfBackup: systemParams.daysOfBackup/24,
-      psh: systemParams.psh,
+      daysOfBackup: autonomy/24,
+      psh: psh,
       systemVolt: systemParams.systemVolt,
       preferredPanel: systemParams.preferredPanel,
-      loadOnBattery: systemParams.loadOnBattery/100,
-      arraySeriesLength: systemParams.arraySeriesLength,
-      batteryType: systemParams.batteryType
+      loadOnBattery: bLoad/100,
+      arraySeriesLength: series,
+      batteryType: systemParams.batteryType,
+      title: title
     }
+    
     return payload;
   };
 
   const isRequestValid = (request:Payload)=>{
       let isNumericValid = (request.energy_wh > 0 && request.load_w>0 && 
       request.daysOfBackup > 0 && request.psh > 0 && request.loadOnBattery > 0 && request.arraySeriesLength >0)
-      let isCategoryValid = (request.batteryType!="" && request.preferredPanel.brand!="" && request.preferredPanel.power>0)
-      
+      let isCategoryValid = (request.batteryType!="" && request.preferredPanel.brand!="" && request.preferredPanel.power>0 && request.title.length > 0)
       return isNumericValid && isCategoryValid
   }
 
@@ -164,6 +173,7 @@ const NewReport: React.FC= ()=>{
         {isLoading && <LoadingScreen message="Generating Report"/>}
         <div className="max-w-7xl mx-auto">
             <div className="space-y-8">
+              
               {/* Mode Toggle */}
               <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-md p-4 rounded-xl shadow-lg">
                 <div className="flex justify-center space-x-4">
@@ -292,7 +302,10 @@ const NewReport: React.FC= ()=>{
                   
                 </div>
               )}
-
+                <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-md p-6 rounded-xl shadow-lg">
+                <label className="block text-sm mb-1">Title:</label>
+                <input type="text" value={title} onChange={(e)=>{setTitle(e.target.value)}} className="bg-white/50 dark:bg-gray-700/50 rounded p-2 w-full" />
+              </div>
               
                   {/* System Parameters with grid layout */}
                   <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-md p-6 rounded-xl shadow-lg">
@@ -330,8 +343,8 @@ const NewReport: React.FC= ()=>{
                         <label className="block text-sm mb-1">Battery Backup (hours)</label>
                         <input
                           type="number"
-                          value={systemParams.daysOfBackup}
-                          onChange={(e) => setSystemParams({...systemParams, daysOfBackup: Number(e.target.value)})}
+                          value={autonomy}
+                          onChange={(e) => setAutonomy(parseInt(e.target.value))}
                           className="bg-white dark:bg-gray-700 rounded p-2 w-full text-gray-900 dark:text-white"
                           step="any"
                         />
@@ -355,8 +368,8 @@ const NewReport: React.FC= ()=>{
                           <label className="block text-sm mb-1">Peak Sun Hours</label>
                           <input
                             type="number"
-                            value={systemParams.psh}
-                            onChange={(e) => setSystemParams({...systemParams, psh: Number(e.target.value)})}
+                            value={psh}
+                            onChange={(e) => setPsh(parseFloat(e.target.value))}
                             className="bg-white dark:bg-gray-700 rounded p-2 w-full text-gray-900 dark:text-white"
                             step="any"
                           />
@@ -372,8 +385,8 @@ const NewReport: React.FC= ()=>{
                         <label className="block text-sm mb-1">Load on Battery (%)</label>
                         <input
                           type="number"
-                          value={systemParams.loadOnBattery}
-                          onChange={(e) => setSystemParams({...systemParams, loadOnBattery: Number(e.target.value)})}
+                          value={bLoad}
+                          onChange={(e) => setBload(parseInt(e.target.value))}
                           className="bg-white dark:bg-gray-700 rounded p-2 w-full text-gray-900 dark:text-white"
                           step="any"
                         />
@@ -383,8 +396,8 @@ const NewReport: React.FC= ()=>{
                         <label className="block text-sm mb-1">Series Connection</label>
                         <input
                           type="number"
-                          value={systemParams.arraySeriesLength}
-                          onChange={(e) => setSystemParams({...systemParams, arraySeriesLength: Number(e.target.value)})}
+                          value={series}
+                          onChange={(e) => setSeries(parseInt(e.target.value))}
                           className="bg-white dark:bg-gray-700 rounded p-2 w-full text-gray-900 dark:text-white"
                           required
                         />
@@ -403,7 +416,7 @@ const NewReport: React.FC= ()=>{
                   Generate Report
                 </button>
               </div>
-              {report!=null&& <SolarReport data={report}/>}
+              {report!=null&& <EditReport data={report}/>}
             </div>
         </div>       
       </main>   

@@ -1,6 +1,6 @@
 import React, { useState} from 'react';
 import Navbar from './navbar';
-import UserReport from './userReports';
+import UserReport from '../components/userReports';
 import NewReport from '../components/newReport';
 
 

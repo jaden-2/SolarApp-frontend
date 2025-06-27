@@ -3,17 +3,19 @@ import { format } from 'date-fns';
 import type { reportInterface, wireDetail } from '../interfaces/interfaces';
 
 
-const SolarReport: React.FC<{ data:  reportInterface}> = ({ data }) => {
+const SolarReport: React.FC<{ data:  reportInterface, editable:boolean}> = ({ data, editable}) => {
+
     return (
         <div className="max-w-7xl mx-auto p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
             <header className="mb-8 text-center">
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    Solar System Report #{data.reportId}
+                    Title: {data.title}
                 </h1>
-                {data.title!=null && <h2><b>Title:</b><i>{data.title}</i></h2>}
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                     Generated: {format(new Date(data.createdAt), 'PPpp')}
                 </p>
+                <h2 className='text-left'><b>ReportId: </b>#{data.reportId}</h2>
+                
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -91,7 +93,7 @@ const SolarReport: React.FC<{ data:  reportInterface}> = ({ data }) => {
                                 </div>
                             </div>
                         </div>
-                        <h3 className='text-center mt-4 pt-4'><b>Required Solar Array Size</b></h3>
+                        <h3 className='text-center mt-4 pt-4'><b>Minimum Solar Array Size</b></h3>
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <p><span className="font-medium">Minimum Solar Array Power:</span> {data.solarArray.calculatePanelCapacity.toFixed(0)}W</p>
                         </div>
@@ -128,15 +130,38 @@ const SolarReport: React.FC<{ data:  reportInterface}> = ({ data }) => {
                                     <p className="font-semibold">{data.inverter.configuration.total}</p>
                                 </div>
                             </div>
+                        
+                        <h3 className='text-center mt-4 pt-4'><b>Minimum Inverter Capacity</b></h3>
                         </div>
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <p><span className="font-medium">Minimum Inverter Capacity:</span> {data.inverter.calculatedInverterCapacityKva}kVA</p>
                         </div>
                     </div>
                 </section>
-
+                
+                {/* DC Breaker Section */}
+                <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl col-span-1">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8V7a5 5 0 0110 0v1m-7 4h6m-7 4h8" />
+                        </svg>
+                        DC Breaker
+                    </h2>
+                    <h3 className='text-center'><b>Recommened Inverter</b></h3>
+                    <div className="space-y-2 text-gray-700 dark:text-gray-300 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p><span className="font-medium">Model:</span> {data.dcBreaker.model}</p>
+                        <p><span className="font-medium">Capacity:</span> {data.dcBreaker.current}A</p>
+                        <p><span className="font-medium">Maximum Voltage:</span> {data.dcBreaker.maximumVoltage}V</p>
+                        <p><span className="font-medium">Type:</span> {data.dcBreaker.type}</p>                        <div>
+                        </div>
+                        <h3 className='text-center mt-4 pt-4'><b>Minimum Dc Breaker Capacity</b></h3>
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p><span className="font-medium">Minimum DC Breaker Capacity:</span> {data.dcBreaker.calculatedCapacity}A</p>
+                        </div>
+                    </div>
+                </section>
                 {/* Charge Controller Section */}
-                <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl lg:col-span-3">
+                <section className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl lg:col-span-2">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h8M8 14h8m-4 4h4m-4-8h4m-4-4h4M4 6h16" />
@@ -171,6 +196,7 @@ const SolarReport: React.FC<{ data:  reportInterface}> = ({ data }) => {
                                 </div>
                             </div>
                     </div>
+                    <h3 className='text-center mt-4 pt-4'><b>Minimum Charge Controller Capacity</b></h3>
                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <p><span className="font-medium">Minimum Controller Capacity:</span> {data.chargeController.calculatedCapacity}A</p>
                         </div>
@@ -194,13 +220,13 @@ const SolarReport: React.FC<{ data:  reportInterface}> = ({ data }) => {
                         ))}
                     </div>
                 </section>
-                 <div className="grid  md:grid-cols-2 lg:grid-cols-3 space-x-4">
-                <button
-                  className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:scale-105 transition-transform lg:col-span-3"
-                >
-                  Download Report
-                </button>
-              </div>
+                <div className="grid  md:col-span-2 lg:col-span-3 space-x-4">
+                    <button
+                    className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:scale-105 transition-transform"
+                    >
+                    Download Report
+                    </button>
+                </div>
             </div>
         </div>
     );
