@@ -1,9 +1,10 @@
 import React from 'react';
 import { format } from 'date-fns';
 import type { reportInterface, wireDetail } from '../interfaces/interfaces';
+import useAuthFetch from '../CustomHook/UseAuthFetch';
 
-
-const SolarReport: React.FC<{ data:  reportInterface, editable:boolean}> = ({ data, editable}) => {
+const SolarReport: React.FC<{ data:  reportInterface}> = ({ data}) => {
+    const {downloadPdf} = useAuthFetch()
 
     return (
         <div className="max-w-7xl mx-auto p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -222,6 +223,7 @@ const SolarReport: React.FC<{ data:  reportInterface, editable:boolean}> = ({ da
                 </section>
                 <div className="grid  md:col-span-2 lg:col-span-3 space-x-4">
                     <button
+                    onClick={()=>downloadPdf(data.reportId)}
                     className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:scale-105 transition-transform"
                     >
                     Download Report

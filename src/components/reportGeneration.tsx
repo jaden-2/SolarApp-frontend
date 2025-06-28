@@ -260,4 +260,3 @@ const LoadEstimation: React.FC = () => {
   );
 };
 
-export default LoadEstimation;

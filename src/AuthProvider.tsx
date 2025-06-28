@@ -4,6 +4,7 @@ type AuthContextType = {
     token:string|null;
     login: (token:string)=>void;
     logout: ()=> void;
+    refresh: ()=> Promise<number>;
 }
 
 const AuthContext = createContext<AuthContextType|undefined>(undefined);
@@ -22,8 +23,18 @@ export const AuthProvider = ({children}:{children:ReactNode})=>{
         setToken(null)
     }
 
+    const refresh = async (): Promise<number>=>{
+        let baseUrl = import.meta.env.VITE_API_URL 
+
+        let response = await fetch(`${baseUrl}/auth/refresh`, {
+            credentials: "include"
+        })
+
+        return response.status
+    }
+
     return(
-       <AuthContext.Provider value={{token, login, logout}}>
+       <AuthContext.Provider value={{token, login, logout, refresh}}>
             {children}
        </AuthContext.Provider>
     )

@@ -14,6 +14,9 @@ export type solarPanel = {
   type: string,
   power: number
 }
+export interface Panels extends solarPanel{
+    id: number
+}
 export type batteryCategories = "LITHIUM"|"AGM"|"FLOODED"|"";
 
 export interface Payload extends SystemParams{
@@ -141,9 +144,7 @@ export interface Inverter{
     type: string
 }
 
-export interface Panels extends solarPanel{
-    id: number
-}
+
 export type ResourceMap ={
     panels: Panels[],
     batteries: Battery[],

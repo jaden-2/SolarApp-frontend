@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import type { batteryCategories, Payload, reportInterface, solarPanel, SystemParams } from "../interfaces/interfaces";
-import { useAuth } from "../AuthProvider";
 import LoadingScreen from "./Loader";
 import { FaPlus, FaTrash } from "react-icons/fa";
+
+import useAuthFetch from "../CustomHook/UseAuthFetch";
 import SolarReport from "./Report";
-import EditReport from "./EditReport";
 
 interface LoadItem {
   id: string;
@@ -24,7 +24,7 @@ const NewReport: React.FC= ()=>{
   const baseApiUrl = import.meta.env.VITE_API_URL;
   const [panels, setPanels] = useState<solarPanel[]>([{brand:"", type:"", power: 0}]);
   const [isError, setIsError] = useState(false)
-  const {token} = useAuth()
+  const {authFetch} = useAuthFetch();
   const [report, setReport] = useState<reportInterface|null>(null);
   const [title, setTitle] = useState<string>("");
   const [autonomy, setAutonomy] = useState<number>(0);
@@ -142,12 +142,11 @@ const NewReport: React.FC= ()=>{
 
     setLoading(true)    
       try{
-      const response = await fetch(`${baseApiUrl}/reports/generate`,
+      const response = await authFetch(`${baseApiUrl}/reports/generate`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            "Content-Type": "application/json"
           },
           body: JSON.stringify(payload)
         }
@@ -156,13 +155,13 @@ const NewReport: React.FC= ()=>{
       if(response.status == 200){
         setReport(await response.json())
         setLoading(false)
-      }else if(response.status == 403){
+      }else if(response.status == 401){
         setLoading(false)
-        console.log("Unauthorized access")    
+        console.log("Unauthorized access after retrying")   
+      }else{
+        setLoading(false)
       }
-      
     }catch(err){
-      //console.error(err)
       setLoading(false)
     }
   }
@@ -416,7 +415,7 @@ const NewReport: React.FC= ()=>{
                   Generate Report
                 </button>
               </div>
-              {report!=null&& <EditReport data={report}/>}
+              {report!=null&& <SolarReport data={report}/>}
             </div>
         </div>       
       </main>   

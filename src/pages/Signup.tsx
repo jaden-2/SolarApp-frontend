@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useDarkMode } from '../components/darkmode';
 import { FaSun, FaMoon } from 'react-icons/fa';
 import LoadingScreen from '../components/Loader';
+import { useNavigate } from 'react-router-dom';
 
 const SignUp: React.FC = () => {
+
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -14,7 +16,7 @@ const SignUp: React.FC = () => {
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [isLoading, setLoading] = useState(false)
   const ApiBaseUrl = import.meta.env.VITE_API_URL;
-  // Add password validation effect
+  const navigate = useNavigate();
   useEffect(() => {
     if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
@@ -53,6 +55,9 @@ const SignUp: React.FC = () => {
         if(response.status == 200){
             // redirect 
             setLoading(false)
+            navigate("/login", {
+              replace: true
+            })
         }
         setError("Something unexpected accured, try again")
         setLoading(false)

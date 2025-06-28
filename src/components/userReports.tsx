@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { FaFileAlt, FaChevronRight } from 'react-icons/fa';
 import type { reportInterface } from '../interfaces/interfaces';
-import { useAuth } from '../AuthProvider';
 import EditReport from '../components/EditReport';
-import SolarReport from './Report';
+import useAuthFetch from '../CustomHook/UseAuthFetch';
 
 
 
@@ -12,18 +11,16 @@ const UserReports: React.FC = () => {
   const [reports, setReports] = useState<reportInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<reportInterface>();
-  const {token} = useAuth();
+  const {authFetch} = useAuthFetch();
   const baseUrl = import.meta.env.VITE_API_URL;
 
   const fetchReports = async (): Promise<reportInterface[]> => {
-  const res = await fetch(`${baseUrl}/reports`, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
-    const data:reportInterface[] = await res.json();
-    
-    return data;
+      
+      const res = await authFetch(`${baseUrl}/reports`, {
+        credentials: "include",
+      });
+      const data:reportInterface[] = await res.json();
+      return data;
   };
 
   const setEditReport = (reportId: number)=>{
@@ -77,7 +74,7 @@ const UserReports: React.FC = () => {
           )}
         </div>
       </div>
-      {selectedReport!=null && <EditReport data={selectedReport}  key={selectedReport.reportId} />}
+      {selectedReport!=null && <EditReport data={selectedReport}  key={selectedReport.reportId} update={setSelectedReport}/>}
     </div>
   );
 };

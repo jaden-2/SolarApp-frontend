@@ -1,13 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { type ModifiedPayLoad, type reportInterface, type ResourceMap, type wireDetail } from '../interfaces/interfaces';
-import { useAuth } from '../AuthProvider';
+import useAuthFetch from '../CustomHook/UseAuthFetch';
 
 
-const fetchResources = async(url: string)=>{
+const EditReport: React.FC<{data: reportInterface, update:React.Dispatch<React.SetStateAction<reportInterface|undefined>>}> = ({data, update}) => {
+  // Local state for editing
+  const [editing, setEditing] = useState<{ [key: string]: boolean }>({});
+  const [report, setReport] = useState<reportInterface>(data);
+  
+  useEffect(()=>{
+    setReport(data)
+  }, [data])
+
+  // Handlers
+  const handleEdit = (section: string) => setEditing({ ...editing, [section]: true });
+  const handleCancel = (section: string) => setEditing({ ...editing, [section]: false });
+
+
+  //-----------my space-----------------
+  const [resources, setResources] = useState<Partial<ResourceMap>>({})
+  const [selectedBatteryC, setSelectedBatteryC] = useState<string>()
+  const [payLoad, setPayload] = useState<Partial<ModifiedPayLoad>>({});
+  const [series, setSeries] = useState<number> (2);
+
+  const {authFetch, downloadPdf} = useAuthFetch()
+
+  const handleChange = (item: string,  value: number) => {
+    setPayload({[item]: value})
+  };
+ 
+
+  const fetchResources = async(url: string)=>{
     try{
-        let response = await fetch(url)
-
+        let response = await authFetch(url)
         if(response.status == 200){
             return await response.json()
         }
@@ -16,56 +42,44 @@ const fetchResources = async(url: string)=>{
     }
 }
 
-const handlePatch = async (url: string, body: string, token: string|null) =>{
+const handlePatch = async (url: string, content: string):Promise<Response|null> =>{
   try{
-    let response = await fetch(url, {
-      body: body,
+    let response = await authFetch(url, {
       method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      body: content,
+      headers:{
+        "Content-Type": "application/json"
+      }      
     })
-    if(response.status == 200)
-      return await response.json()
+
+    if(response.status == 200){
+      update(await response.json());
+    }
+    return await response.json()
   }catch(err){
-    console.error(err)
+    return null;
   }
 }
-
-const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
-
-  // Local state for editing
-  const [editing, setEditing] = useState<{ [key: string]: boolean }>({});
-  const [report, setReport] = useState<reportInterface>(data);
- 
-  // Handlers
-  const handleEdit = (section: string) => setEditing({ ...editing, [section]: true });
-  const handleCancel = (section: string) => setEditing({ ...editing, [section]: false });
-
-  const handleChange = (item: string,  value: number) => {
-    setPayload((prev=>({...prev, [item]: value})))
-
-  };
-
-
-  const handleSave = async (patch: string, section: string) => {
+const handleSave = async (patch: string, section: string) => {
     setEditing({ ...editing, [section]: false });
+
     const key = patch as keyof ModifiedPayLoad;
-    let requestBody = JSON.stringify({
+    let fullpanel= key!="array"? undefined: resources.panels?.find((panel)=>panel.id===payLoad[key]);
+
+    let requestBody:string = JSON.stringify(key=="array"?{
+      panel: {
+        brand: fullpanel?.brand,
+        power: fullpanel?.power
+      },
+      series: series
+    }:{
       id: payLoad[key]
-    }
-    )
-    let url = `${import.meta.env.VITE_API_URL}/${report.reportId}/${key}`
-    let updateReport:reportInterface = await handlePatch(url, requestBody, token);
-    setReport(updateReport)
+    })
+    
+    let url = `${import.meta.env.VITE_API_URL}/reports/${report.reportId}/${key}`
+    handlePatch(url, requestBody)
   };
-
-  //-----------my space-----------------
-  const [resources, setResources] = useState<Partial<ResourceMap>>({})
-  const [selectedBatteryC, setSelectedBatteryC] = useState<string>()
-  const [payLoad, setPayload] = useState<Partial<ModifiedPayLoad>>({});
-  const {token} = useAuth()
-
+  
   useEffect(()=>{
       let baseUrl = import.meta.env.VITE_API_URL
       let items: (keyof ResourceMap)[] = ["panels", "inverters", "batteries", "controllers"]
@@ -76,7 +90,7 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
           })
       })
   }, [])
-    
+
  
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -234,10 +248,10 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             <div className="space-y-4">
               <label className="block mb-1 font-medium">Solar Array</label>
               <select
-                value={report.solarArray.brand}
                 onChange={e => handleChange('array', parseInt(e.target.value))}
                 className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               >
+                <option hidden disabled>Select Solar Panel</option>
                 {
                 resources.panels?.map((panel) => (
                   <option key={panel.id} value={panel.id}>
@@ -246,6 +260,12 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
                 ))}
               </select>
               {/* Add more editable fields as needed */}
+              <div>
+                <label className="block text-sm mb-1">Series Connection</label>
+                <input type="number" value={series}  onChange={(e)=>setSeries(parseInt(e.target.value))}
+                className="bg-white dark:bg-gray-700 rounded p-2 w-full text-gray-900 dark:text-white"
+                />
+              </div>
             </div>
           ) : (
             <section>   
@@ -254,6 +274,7 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
                         <p><span className="font-medium">Brand:</span> {data.solarArray.brand}</p>
                         <p><span className="font-medium">Model:</span> {data.solarArray.model}</p>
                         <p><span className="font-medium">Power:</span> {data.solarArray.electricalProperties.power_w}W</p>
+                        <p><span className="font-medium">Vmax:</span> {data.solarArray.electricalProperties.Vmax}V</p>
                         <p><span className="font-medium">Type:</span> {data.solarArray.electricalProperties.type}</p>
                         <div>
                             <p className="font-medium mb-2">Configuration:</p>
@@ -318,7 +339,6 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             <div className="space-y-4">
               <label className="block mb-1 font-medium">Inverter</label>
               <select
-                value={report.inverter.name}
                 onChange={e => handleChange('inverter', parseInt(e.target.value))}
                 className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               >
@@ -402,7 +422,6 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             <div className="space-y-4">
               <label className="block mb-1 font-medium">Charge Controller</label>
               <select
-                value={report.chargeController.brand}
                 onChange={e => handleChange('controller', parseInt(e.target.value))}
                 className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
               >
@@ -492,7 +511,15 @@ const EditReport: React.FC<{data: reportInterface}> = ({data}) => {
             ))}
           </div>
         </section>
-      </div>
+      </div>   
+       <div className=" mt-2 pt-2 grid  md:col-span-2 lg:col-span-3 space-x-4">
+          <button
+          onClick={()=>downloadPdf(data.reportId)}
+          className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:scale-105 transition-transform"
+          >
+          Download Report
+          </button>
+        </div>
     </div>
   );
 };

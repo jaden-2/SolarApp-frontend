@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useDarkMode } from '../components/darkmode';
 import { FaSun, FaMoon } from 'react-icons/fa';
 import LoadingScreen from '../components/Loader';
-import { useAuth } from '../AuthProvider';
 import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
@@ -12,7 +11,6 @@ const Login: React.FC = () => {
   const { darkMode, toggleDarkMode } = useDarkMode();
   const apiEndpint: string = import.meta.env.VITE_API_URL;
   const [isLoading, setLoading] = useState(false);
-  const {login} = useAuth();
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,6 +20,7 @@ const Login: React.FC = () => {
     try {
       const response = await fetch(`${apiEndpint}/auth/login`, {
         method: 'POST',
+        credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
@@ -32,8 +31,6 @@ const Login: React.FC = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        login(data.token)
         setLoading(false)
         navigate("/get-started", {
           replace: true
