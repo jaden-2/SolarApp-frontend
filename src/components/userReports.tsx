@@ -3,6 +3,7 @@ import { FaFileAlt, FaChevronRight } from 'react-icons/fa';
 import type { reportInterface } from '../interfaces/interfaces';
 import EditReport from '../components/EditReport';
 import useAuthFetch from '../CustomHook/UseAuthFetch';
+import { useAuth } from '../AuthProvider';
 
 
 
@@ -13,9 +14,10 @@ const UserReports: React.FC = () => {
   const [selectedReport, setSelectedReport] = useState<reportInterface>();
   const {authFetch} = useAuthFetch();
   const baseUrl = import.meta.env.VITE_API_URL;
+  const {isAuthenticated} = useAuth()
 
   const fetchReports = async (): Promise<reportInterface[]> => {
-      
+      if(!isAuthenticated) return [];
       const res = await authFetch(`${baseUrl}/reports`, {
         credentials: "include",
       });
@@ -30,10 +32,14 @@ const UserReports: React.FC = () => {
   }
   
   useEffect(() => {
-    fetchReports().then((data) => {
-      setReports(data);
+     if (isAuthenticated) {
+      fetchReports().then((data) => {
+        setReports(data);
+        setLoading(false);
+      });
+    } else {
       setLoading(false);
-    });
+    }
   }, []);
 
   return (
@@ -42,7 +48,11 @@ const UserReports: React.FC = () => {
       <div className="max-w-2xl mx-auto pt-32 px-4 pb-12">
         <h1 className="text-3xl font-bold mb-8 text-center">My Solar Reports</h1>
         <div className="bg-white/80 dark:bg-gray-800/80 rounded-xl shadow-lg p-6">
-          {loading ? (
+          {!isAuthenticated ? (
+            <div className="text-center py-8 text-yellow-700 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/30 rounded">
+              Please log in to view your reports.
+            </div>
+          ) : loading ? (
             <div className="text-center py-8 text-gray-500">Loading...</div>
           ) : reports.length === 0 ? (
             <div className="text-center py-8 text-gray-500">No reports found.</div>

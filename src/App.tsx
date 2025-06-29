@@ -11,6 +11,7 @@ function App() {
     <DarkModeProvider>
       <BrowserRouter>
         <Routes>
+            <Route path='/' element={<LandingPage/>}/>
             <Route path='/home' element={<LandingPage/>}/>
             <Route path='/login' element={<Login/>}/>
             <Route path="/sign-up" element={<SignUp/>}/>

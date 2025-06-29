@@ -1,28 +1,15 @@
-import {useContext, createContext, useState, type ReactNode} from "react";
+import React, {useContext, createContext, type ReactNode, useState} from "react";
 
 type AuthContextType = {
-    token:string|null;
-    login: (token:string)=>void;
-    logout: ()=> void;
     refresh: ()=> Promise<number>;
+    isAuthenticated: boolean;
+    setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType|undefined>(undefined);
 
 export const AuthProvider = ({children}:{children:ReactNode})=>{
-
-    const [token, setToken] = useState<string|null>(()=>sessionStorage.getItem("token"));
-
-    const login = (token:string)=>{
-        sessionStorage.setItem("token", token);
-        setToken(token);
-    }
-
-    const logout = ()=>{
-        sessionStorage.removeItem("token");
-        setToken(null)
-    }
-
+    let [isAuthenticated, setIsAuthenticated] = useState(false);
     const refresh = async (): Promise<number>=>{
         let baseUrl = import.meta.env.VITE_API_URL 
 
@@ -34,7 +21,7 @@ export const AuthProvider = ({children}:{children:ReactNode})=>{
     }
 
     return(
-       <AuthContext.Provider value={{token, login, logout, refresh}}>
+       <AuthContext.Provider value={{refresh, isAuthenticated, setIsAuthenticated}}>
             {children}
        </AuthContext.Provider>
     )

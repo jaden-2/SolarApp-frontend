@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDarkMode } from '../components/darkmode';
-import { FaSun, FaMoon } from 'react-icons/fa';
+
 import LoadingScreen from '../components/Loader';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,7 +12,7 @@ const SignUp: React.FC = () => {
   });
   const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
-  const { darkMode, toggleDarkMode } = useDarkMode();
+  // const { darkMode, toggleDarkMode } = useDarkMode();
   const [isLoading, setLoading] = useState(false)
   const ApiBaseUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
@@ -76,7 +75,7 @@ const SignUp: React.FC = () => {
     }
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       {/* Dark Mode Toggle */}
-      <button
+      {/* <button
         onClick={toggleDarkMode}
         className="absolute top-4 right-4 p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         aria-label="Toggle dark mode"
@@ -86,13 +85,41 @@ const SignUp: React.FC = () => {
         ) : (
           <FaMoon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
         )}
-      </button>
+      </button> */}
 
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-2xl lg:max-w-3xl xl:max-w-4xl space-y-8 bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Create your account
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-300">
+            Join Solar and take the first step towards energy independence. Get instant estimates, personalized recommendations, and expert support for your solar setup.
+          </p>
+        </div>
+
+        {/* Features Section */}
+        <div className="mt-6 space-y-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-green-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+            </span>
+            <span className="text-gray-700 dark:text-gray-200 text-sm">Get a free, instant solar estimate</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-yellow-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.95l-.71.71M21 12h-1M4 12H3m16.66 5.66l-.71-.71M4.05 4.05l-.71-.71" /></svg>
+            </span>
+            <span className="text-gray-700 dark:text-gray-200 text-sm">Personalized system recommendations</span>
+          </div>
+          
+        </div>
+
+        {/* Optional: Testimonial */}
+        <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded">
+          <p className="text-sm italic text-gray-700 dark:text-gray-200">
+            “Solar made it easy to understand my options and get started with clean energy. Highly recommended!”
+          </p>
+          <p className="mt-1 text-xs text-right text-gray-500 dark:text-gray-400">— Happy Customer</p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
