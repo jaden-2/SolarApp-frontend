@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import LoadingScreen from '../components/Loader';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 
 const Login: React.FC = () => {
@@ -157,12 +157,11 @@ const Login: React.FC = () => {
             >
               Dont have an account?
             </span>
-            <a
-              href="/sign-up"
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            <Link to={"/sign-up"}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               Create account
-            </a>
+            </Link>
           </div>
         </form>
       </div>

@@ -34,7 +34,7 @@ const LandingPage: React.FC = () => {
               Login
             </Link>
             <Link 
-              to="/signup"
+              to="/sign-up"
               className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 text-white px-5 py-2 rounded-full font-semibold hover:scale-105 transition-transform shadow-md"
             >
               Sign Up
