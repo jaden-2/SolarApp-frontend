@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import LoadingScreen from '../components/Loader';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const SignUp: React.FC = () => {
 
@@ -206,12 +206,12 @@ const SignUp: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               Already have an account? Sign in
-            </a>
+            </Link>
           </div>
         </form>
       </div>
