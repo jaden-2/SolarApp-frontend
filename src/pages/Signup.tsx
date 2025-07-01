@@ -41,7 +41,7 @@ const SignUp: React.FC = () => {
     
         try{
         let response = await fetch(
-            `${ApiBaseUrl}/account/sign-up`,
+            `${ApiBaseUrl}/account/signup`,
             {
                 body: JSON.stringify(formData),
                 method: "POST",
