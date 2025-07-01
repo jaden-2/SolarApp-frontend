@@ -13,6 +13,7 @@ const SignUp: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
   const [disabled, setDisabled] = useState(false);
+  const [userExists, setUserExists] = useState("");
   const disabledInputStyle = disabled? "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-800" : "";
   // const { darkMode, toggleDarkMode } = useDarkMode();
   const [isLoading, setLoading] = useState(false)
@@ -22,18 +23,19 @@ const SignUp: React.FC = () => {
   useEffect(()=>{
     const checkUsername= async ()=>{
      let resp = await fetch(`${import.meta.env.VITE_API_URL}/account/exists?username=${formData.username}`)
+
      if (resp.ok){
       let val = await resp.json()
       if (val){
-        setError(`${formData.username} exists`)
+        setUserExists(`${formData.username} exists`)
         setDisabled(true)
       } 
-      setError("")
+      setUserExists("")
       setDisabled(false)
      }
     }
 
-    setTimeout(checkUsername, 500)
+    setTimeout(checkUsername, 700)
 }, [formData.username])
 
   useEffect(() => {
@@ -155,6 +157,9 @@ const SignUp: React.FC = () => {
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Username
               </label>
+              {userExists&& <div className="bg-red-50 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+              {userExists}
+            </div>}
               <input
                 id="username"
                 name="username"
