@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaRocket, FaLinkedin, FaGithub } from 'react-icons/fa';
 
 const LandingPage: React.FC = () => {
-
+  
+  useEffect(()=>{
+    const ping = async ()=>{
+      await fetch(`${import.meta.env.VITE_API_URL}/ping`)
+    }
+    ping()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 text-gray-900 dark:text-white transition-colors duration-300">

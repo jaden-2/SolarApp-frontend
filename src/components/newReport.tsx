@@ -299,7 +299,7 @@ const disabledInputStyle = !isAuthenticated ? "opacity-60 cursor-not-allowed bg-
               />
             </div>
             <div>
-              <label className="block text-sm mb-1">Total Energy (Wh)</label>
+              <label className="block text-sm mb-1">Total Daily Energy Required (Wh)</label>
               <input
                 type="number"
                 value={directInput.energy}
