@@ -50,8 +50,8 @@ const SignUp: React.FC = () => {
                 }
             }
         )
-
-        if(response.status == 200){
+        
+        if(response.ok){
             // redirect 
             setLoading(false)
             navigate("/login", {
