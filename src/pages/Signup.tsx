@@ -12,10 +12,30 @@ const SignUp: React.FC = () => {
   });
   const [passwordError, setPasswordError] = useState('');
   const [error, setError] = useState('');
+  const [disabled, setDisabled] = useState(false);
+  const disabledInputStyle = disabled? "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-800" : "";
   // const { darkMode, toggleDarkMode } = useDarkMode();
   const [isLoading, setLoading] = useState(false)
   const ApiBaseUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
+
+  useEffect(()=>{
+    const checkUsername= async ()=>{
+     let resp = await fetch(`${import.meta.env.VITE_API_URL}/account/exists`)
+     if (resp.ok){
+      let val = await resp.json()
+      if (val){
+        setError(`${formData.username} exists`)
+        setDisabled(true)
+      } 
+      setError("")
+      setDisabled(false)
+     }
+    }
+
+    setTimeout(checkUsername, 500)
+}, [formData.username])
+
   useEffect(() => {
     if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
       setPasswordError('Passwords do not match');
@@ -196,11 +216,8 @@ const SignUp: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md 
-                       text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600
-                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900
-                       transition-colors"
-            >
+              className={"group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"+disabledInputStyle}
+            disabled={disabled}>
               Create Account
             </button>
           </div>
