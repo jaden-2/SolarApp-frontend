@@ -29,13 +29,16 @@ const SignUp: React.FC = () => {
       if (val){
         setUserExists(`${formData.username} exists`)
         setDisabled(true)
-      } 
-      setUserExists("")
+      }else{
+        setUserExists("")
       setDisabled(false)
+      }
+      
      }
     }
 
-    setTimeout(checkUsername, 700)
+    let timeout =setTimeout(checkUsername, 700)
+    return ()=>clearTimeout(timeout)
 }, [formData.username])
 
   useEffect(() => {
@@ -157,9 +160,6 @@ const SignUp: React.FC = () => {
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Username
               </label>
-              {userExists&& (<div className="bg-red-50 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
-              {userExists}
-            </div>)}
               <input
                 id="username"
                 name="username"
@@ -171,6 +171,9 @@ const SignUp: React.FC = () => {
                          bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                          focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               />
+              {userExists&& (<div className="bg-red-50 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+              {userExists}
+            </div>)}
             </div>
 
             {/* Password Field */}
