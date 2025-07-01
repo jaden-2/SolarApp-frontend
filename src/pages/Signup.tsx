@@ -157,9 +157,9 @@ const SignUp: React.FC = () => {
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Username
               </label>
-              {userExists&& <div className="bg-red-50 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
+              {userExists&& (<div className="bg-red-50 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative">
               {userExists}
-            </div>}
+            </div>)}
               <input
                 id="username"
                 name="username"
