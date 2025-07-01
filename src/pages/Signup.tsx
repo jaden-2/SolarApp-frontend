@@ -21,7 +21,7 @@ const SignUp: React.FC = () => {
 
   useEffect(()=>{
     const checkUsername= async ()=>{
-     let resp = await fetch(`${import.meta.env.VITE_API_URL}/account/exists`)
+     let resp = await fetch(`${import.meta.env.VITE_API_URL}/account/exists?username=${formData.username}`)
      if (resp.ok){
       let val = await resp.json()
       if (val){
